@@ -5,15 +5,17 @@ const app=express();
 app.get("/",(req,res)=>{
     res.send("Hello From the Home Page");
 });
+app.get("/users",(req,res)=>{
+    res.send({firstname:"Karthik",lastname:"SK"});
+})
 
-app.use("/about",(req,res)=>{
-    res.send("Hello From the About Page");
-});
+app.post("/users",(req,res)=>{
+    res.send("Data Sent");
+})
 
-app.use("/home",(req,res)=>{
-    res.send("This is The about page");
-});
-
+app.delete("/users",(req,res)=>{
+    res.send("Data deleted");
+})
 app.listen(7777,()=>{
     console.log("Server is Running on port 7777");
 });
