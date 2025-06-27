@@ -1,21 +1,36 @@
 const express=require("express")
-
+const connectDB=require("./config/database.js")
 const app=express();
+const User=require("./models/user.js");
 
-app.get("/",(req,res)=>{
-    res.send("Hello From the Home Page");
-});
-app.get("/users",(req,res)=>{
-    res.send({firstname:"Karthik",lastname:"SK"});
-})
+const {adminAuth}=require('./middlewares/auth.js');
 
-app.post("/users",(req,res)=>{
-    res.send("Data Sent");
-})
 
-app.delete("/users",(req,res)=>{
-    res.send("Data deleted");
+app.post("/signup",async(req,res)=>{
+    const user=new User({
+        firstName:"Virat",
+        lastName:"Kholi",
+        emailId:"Virat@gmail.com",
+        password:"Virat@123",
+    });
+    try{
+
+        await user.save();
+        res.send("User added Sucessfully");
+    }
+    catch(err){
+        res.status(400).send("Error in saving data");
+    }
 })
-app.listen(7777,()=>{
+connectDB().then(()=>{
+    console.log("Database Established");
+    app.listen(7777,()=>{
     console.log("Server is Running on port 7777");
 });
+}
+)
+.catch((err)=>{
+    console.log("Database cannot be established");
+})
+
+
