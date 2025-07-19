@@ -2,13 +2,17 @@ const express=require("express")
 const connectDB=require("./config/database.js")
 const app=express();
 const User=require("./models/user.js");
-const {validatesignup}=require('./utils/validator.js')
-const {adminAuth}=require('./middlewares/auth.js');
+const {validatorSignupdata}=require('./utils/validator.js')
+const {userAuth}=require('./middlewares/auth.js');
+const bcrypt=require('bcrypt');
+const cookieParser=require('cookie-parser');
+const jwt=require('jsonwebtoken')
 
 app.use(express.json());
+app.use(cookieParser());
 app.post("/signup",async(req,res)=>{
     try{
-        validatesignup(req);
+        validatorSignupdata(req);
         const {firstName,lastName,emailId,password}=req.body;
 
         const passwordHash=await bcrypt.hash(password,10);
@@ -16,14 +20,17 @@ app.post("/signup",async(req,res)=>{
             firstName,
             lastName,
             emailId,
-            passwordHash
+            password:passwordHash,
         });
         await user.save();
         res.send("User added Sucessfully");
     }
     catch(err){
-        res.status(400).send("Error in saving data"+err.message);
+        res.status(400).send("Error in saving data " + err.message);
     }
+})
+app.post("/sendconnection",userAuth,async(req,res)=>{
+    res.send(req.user.firstName + " send you a Connection request");
 })
 app.get("/user/:userId", async (req,res)=>{
     const useremail=req.body.emailId;
@@ -40,6 +47,52 @@ app.get("/user/:userId", async (req,res)=>{
     }
     catch(err){
         res.status(400).send("Something went wrong");
+    }
+})
+
+app.get("/profile", userAuth,async (req,res)=>{
+    try{
+        
+       const user=req.user;
+        
+        res.send(user);
+    }
+    catch(err){
+        res.status(400).send("ERROR " + err.message);
+    }
+
+})
+app.post("/login",async (req,res)=>{
+
+    try{
+
+        const {emailId,password}=req.body;
+        // console.log(req.body);
+
+        const user=await User.findOne({emailId:emailId});
+
+        if(!user){
+            throw new Error("Invalid Credentials!!");
+        }
+
+        const isValidPassword=await user.validatePassword(password);
+
+
+        if(isValidPassword){
+
+           const token=await user.getJWT();
+            res.cookie("Token",token,{expires:new Date(Date.now()+8*3600000)});
+            res.send("Login Successfull");
+        }
+        else{
+            throw new Error("Password is not Correct");
+        }
+        
+        
+
+    }
+    catch(err){
+        res.status(400).send("Error "+err.message)
     }
 })
 app.get("/feed",async(req,res)=>{

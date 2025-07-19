@@ -1,8 +1,10 @@
 const validator=require('validator');
+
+
 const validatorSignupdata=(req)=>{
     const {firstName,lastName,emailId,password}=req.body;
 
-    if(!firstName || !lastName){
+    if(!firstName){
         throw new Error("Name is Not Valid");
     }
     else if(!validator.isEmail(emailId)){
