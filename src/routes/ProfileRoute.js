@@ -49,7 +49,6 @@ ProfileRouter.patch("/profile/password",userAuth,async (req,res)=>{
         }
 
         const user=await req.user;
-        
         const passwordHash=await bcrypt.hash(req.body.password,10);
         console.log(user.password);
 
