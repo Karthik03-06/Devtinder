@@ -6,6 +6,7 @@ const {userAuth}=require('../middlewares/auth');
 const User=require('../models/user')
 
 const ConnectionRequestModel=require('../models/connectionRequest');
+const { connection } = require('mongoose');
 RequestRouter.post("/request/send/:status/:toUserId",userAuth,async(req,res)=>{
 
     try{
@@ -50,4 +51,33 @@ RequestRouter.post("/request/send/:status/:toUserId",userAuth,async(req,res)=>{
     }
 })
 
+RequestRouter.post("/request/review/:status/:requestId",userAuth,async (req,res)=>{
+    try{
+        const {status,requestId}=req.params;
+        const loggedinuser=req.user;
+
+        const allowedStatus=["Accepted","Rejected"];
+
+        if(!allowedStatus.includes(status)){
+            return res.status(400).json({message:"Status Not Allowd !!"})
+        }
+        const connectionrequest=await ConnectionRequestModel.findOne({
+            _id:requestId,
+            toUserId:loggedinuser._id,
+            status:"Interested",
+        } );
+        if(!connectionrequest){
+            return res.status(400).json({message:"Connection request not found"});
+        }
+        connectionrequest.status=status;
+        
+        const data=await connectionrequest.save();
+
+        res.json({message:"Connection Request "+ status,data});
+
+    }
+    catch(err){
+        res.status(404).send("Error "+err.message);
+    }
+})
 module.exports=RequestRouter;
